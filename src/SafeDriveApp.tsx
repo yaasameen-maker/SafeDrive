@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MapPin, Navigation, Shield, TrendingUp, AlertTriangle, CheckCircle, Car, User, Settings, Moon, Sun, LogOut } from 'lucide-react';
 import { auth, db } from './firebase/config';
 import { 
@@ -17,14 +17,6 @@ type Alert = {
   message: string;
   timestamp: string;
 };
-
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      [elemName: string]: any;
-    }
-  }
-}
 
 const SafeDriveApp = () => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -108,7 +100,7 @@ const SafeDriveApp = () => {
         return;
       }
 
-      watchIdRef.current = navigator.geolocation.watchPosition(
+      const watchId = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude, speed } = position.coords;
           const speedMph = speed ? Math.round(speed * 2.23694) : 0;
@@ -140,6 +132,7 @@ const SafeDriveApp = () => {
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
+      watchIdRef.current = watchId;
 
     } else {
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
@@ -347,7 +340,7 @@ const SafeDriveApp = () => {
                     </select>
                 </div>
                 <div><label className={labelClass}>Model</label><input type="text" value={vehicleInfo.model} onChange={e => setVehicleInfo(p => ({...p, model: e.target.value}))} className={inputClass} /></div>
-                <div><label className={labelClass}>Year</label><input type="number" value={vehicleInfo.year} onChange={e => setVehicleInfo(p => ({...p, year: e.target.value}))} className={inputClass} /></div>
+                <div><label className={labelClass}>Year</label><input type="text" value={vehicleInfo.year} onChange={e => setVehicleInfo(p => ({...p, year: e.target.value}))} className={inputClass} /></div>
                 <div><label className={labelClass}>License Plate</label><input type="text" value={vehicleInfo.licensePlate} onChange={e => setVehicleInfo(p => ({...p, licensePlate: e.target.value}))} className={inputClass} /></div>
               </div>
               <div><label className={labelClass}>VIN</label><input type="text" value={vehicleInfo.vin} onChange={e => setVehicleInfo(p => ({...p, vin: e.target.value}))} className={inputClass} /></div>
@@ -360,7 +353,10 @@ const SafeDriveApp = () => {
   );
 };
 
-const LoginScreen = ({ setAlerts }: { setAlerts: React.Dispatch<React.SetStateAction<Alert[]>> }) => {
+// Define setAlerts type explicitly for clarity
+type SetAlerts = (alerts: React.SetStateAction<Alert[]>) => void;
+
+const LoginScreen = ({ setAlerts }: { setAlerts: SetAlerts }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSigningUp, setIsSigningUp] = useState(false);
